@@ -1,31 +1,97 @@
 `timescale 1ns / 1ps
 
-module alu( A, B, ALU_Sel, ALU_Result); 
-  input [7:0] A,B; // ALU 8-bit Inputs 
-  input [3:0] ALU_Sel;// ALU Selection 
-  output [8:0] ALU_Result;// ALU 8-bit Result
-  reg [8:0] ALU_Result;
- 
-always @(*) begin 
-  case(ALU_Sel) 
-4'b0000:ALU_Result = A + B ; // Addition  
-4'b0001:ALU_Result = A - B ; // Subtraction   
-//4'b0010:ALU_Result = A * B; // Multiplication   
-4'b0011: ALU_Result = A/B; // Division  
-4'b0100: ALU_Result = A<<1;// Logical shift left  
-4'b0101: ALU_Result = A>>1;// Logical shift right 
-4'b0110: ALU_Result = {A[6:0],A[7]};// Rotate left  
-4'b0111: ALU_Result = {A[0],A[7:1]}; // Rotate right 
-4'b1000: ALU_Result = A & B; // Logical and 
-4'b1001: ALU_Result = A | B;// Logical or  
-4'b1010: ALU_Result = A ^ B;// Logical xor  
-4'b1011: ALU_Result = ~(A | B);// Logical nor  
-4'b1100: ALU_Result = ~(A & B); // Logical nand 
-4'b1101: ALU_Result = ~(A ^ B); // Logical xnor 
-4'b1110: ALU_Result = (A>B)?8'd1:8'd0 ; // Greater comparison 
-4'b1111: ALU_Result = (A==B)?8'd1:8'd0 ;// Equal comparison
-  default: ALU_Result = 0; 
-endcase 
-end 
-endmodule 
+module ALU (opcode,operand1,operand2,result,flagC,flagZ);
+input [3:0]opcode;
+input[7:0]operand1,operand2;
+output reg[15:0]result=16'b0;
+output reg flagC = 1'b0,flagZ=1'b0;
+parameter[3:0]ADD =4'b0000,
+SUB=4'b0001,
+MUL=4'b0010,
+DIV=4'b0011,
+LSL=4'b0100,
+LSR=4'b0101,
+ROL=4'b0110,
+ROR=4'b0111,
+AND=4'b1000,
+OR=4'b1001,
+XOR=4'b1010,
+NOR=4'b1011,
+NAND=4'b1100,
+XNOR=4'b1101,
+GTH=4'b1110,
+EQL=4'b1111;
 
+always@(opcode,operand1,operand2)
+begin
+case(opcode)
+ADD:begin
+result = operand1+operand2;
+flagC = result[8];
+flagZ = (result == 16'b0);
+end
+SUB:begin
+result = operand1 - operand2;
+flagC = result[8];
+flagZ = (result == 16'b0);
+end
+MUL: begin
+result = operand1*operand2;
+flagZ = (result == 16'b0);
+end
+DIV: begin
+result = operand1/operand2;
+flagZ = (result == 16'b0);
+end 
+LSL: begin
+result = operand1<<1;
+flagZ = (result == 16'b0);
+end
+LSR: begin
+result = operand1>>1;
+flagZ = (result == 16'b0);
+end
+ROL: begin
+result = {operand1[6:0],operand1[7]};
+end
+ROR: begin
+result = {operand1[0],operand1[7:1]};
+end
+AND: begin
+result = operand1 & operand2;
+flagZ = (result == 16'b0);
+end
+OR: begin
+result = operand1|operand2;
+flagZ = (result == 16'b0);
+end
+NAND: begin
+result = ~(operand1&operand2);
+flagZ = (result == 16'b0);
+end
+NOR: begin
+result = ~(operand1|operand2);
+flagZ = (result == 16'b0);
+end
+XOR: begin
+result = operand1^operand2;
+flagZ = (result == 16'b0);
+end 
+XNOR:begin
+result = ~(operand1^operand2);
+flagZ = (result == 16'b0);
+end 
+GTH: begin
+result = (operand1>operand2)?16'b1:16'b0 ;
+end
+EQL: begin
+result = (operand1==operand2)?16'b1:16'b0;
+end
+default:begin
+result = 16'b0;
+flagC = 1'b0;
+flagZ = 1'b0;
+end
+endcase
+end
+endmodule
